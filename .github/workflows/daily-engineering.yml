@@ -1,0 +1,31 @@
+name: Daily Contribution Log
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "30 0 * * *" # 6:00 AM IST (00:30 UTC)
+  workflow_dispatch:
+
+jobs:
+  contribute:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create daily contribution file
+        run: |
+          DATE=$(date '+%Y-%m-%d')
+          mkdir -p contributions
+          echo "Daily engineering log for $DATE" > contributions/$DATE.md
+
+      - name: Commit and push
+        run: |
+          git config user.name "Vaibhavi Rathod"
+          git config user.email "72556675+vaibhavi-rathod@users.noreply.github.com"
+
+          git add contributions/
+          git commit -m "docs: daily engineering contribution ($DATE)" || exit 0
+          git push 

@@ -1,0 +1,56 @@
+name: Weekly Architecture Lab
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "0 18 * * 0" # Sunday 11:30 PM IST
+  workflow_dispatch:
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate weekly architecture diagram
+        shell: bash
+        run: |
+          set -e
+
+          DATE=$(date '+%Y-%m-%d')
+          WEEK=$(date '+%U')
+
+          mkdir -p diagrams
+
+          if [ $((WEEK % 3)) -eq 0 ]; then
+            TYPE="aws"
+          elif [ $((WEEK % 3)) -eq 1 ]; then
+            TYPE="gcp"
+          else
+            TYPE="ci-cd"
+          fi
+
+          FILE="diagrams/${TYPE}-architecture-${DATE}.md"
+
+          printf "# %s Architecture – %s\n\n" "${TYPE^^}" "$DATE" > "$FILE"
+          printf "```mermaid\n" >> "$FILE"
+          printf "flowchart TD\n" >> "$FILE"
+          printf "    Client --> API[Backend Service]\n" >> "$FILE"
+          printf "    API --> Cache[Redis]\n" >> "$FILE"
+          printf "    API --> DB[(PostgreSQL)]\n" >> "$FILE"
+          printf "    API --> Monitor[Datadog / Prometheus]\n" >> "$FILE"
+          printf "```\n" >> "$FILE"
+
+      - name: Commit and push changes
+        shell: bash
+        run: |
+          git config user.name "Vaibhavi Rathod"
+          git config user.email "72556675+vaibhavi-rathod@users.noreply.github.com"
+
+          git add diagrams/
+          git commit -m "docs: add weekly ${TYPE} architecture lab (${DATE})" || exit 0
+          git push
